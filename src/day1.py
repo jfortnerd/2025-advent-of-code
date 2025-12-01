@@ -1,6 +1,7 @@
 ### Day 1
 
 import sys
+import math
 
 GOOD_EXIT = 0
 BAD_EXIT = 1
@@ -8,8 +9,10 @@ BAD_EXIT = 1
 MAX_DIAL_NUM = 99
 MIN_DIAL_NUM = 0
 
-INPUT_FILE = "day1.txt"
+INPUT_FILE = "day1.in"
 INPUT_FILE_PATH = "../data/"
+
+OUTPUT_LOG = "day1.out"
 
 TURN_DIAL_LEFT = "L"
 TURN_DIAL_RIGHT = "R"
@@ -67,13 +70,15 @@ def main():
     current_num = dial_start
     zero_count = 0
     for combo in combos:
-        print("Debug: Before = " + str(current_num))
+        output_string = "Debug: BEF: " + str(current_num)
+        curr_zero_count_round = 0
 
         if combo[TURN_DIRECTION] == TURN_DIAL_RIGHT:
             current_num = current_num + (int(combo[TURN_DISTANCE]) % (MAX_DIAL_NUM + 1))
 
             if current_num > MAX_DIAL_NUM:
                 current_num = current_num - MAX_DIAL_NUM - 1
+                curr_zero_count_round = curr_zero_count_round + 1
 
         if combo[TURN_DIRECTION] == TURN_DIAL_LEFT:
             current_num = current_num - (int(combo[TURN_DISTANCE]) % (MAX_DIAL_NUM + 1))
@@ -81,13 +86,26 @@ def main():
             if current_num < MIN_DIAL_NUM:
                 current_num = current_num + MAX_DIAL_NUM + 1
 
-        print(", DIR: " + str(combo[TURN_DIRECTION]))
-        print(", DIS: " + str(combo[TURN_DISTANCE]))
-        print(", After: " + str(current_num))
+                if (current_num + int(combo[TURN_DISTANCE]) != MAX_DIAL_NUM + 1):
+                    curr_zero_count_round = curr_zero_count_round + 1
 
-        if current_num == 0:
-            zero_count = zero_count + 1
+        total_rotations = math.floor(int(combo[TURN_DISTANCE]) / (MAX_DIAL_NUM + 1))
+
+        if total_rotations > 0:
+            curr_zero_count_round = curr_zero_count_round + total_rotations
+
+            if current_num == 0 and combo[TURN_DIRECTION] == TURN_DIAL_LEFT:
+                curr_zero_count_round = curr_zero_count_round + 1
+
+        zero_count = zero_count + curr_zero_count_round
+
+        output_string = output_string + ", DIR: " + str(combo[TURN_DIRECTION])
+        output_string = output_string + ", DIS: " + str(combo[TURN_DISTANCE])
+        output_string = output_string + ", AFT: " + str(current_num)
+        output_string = output_string + ", ZER: " + str(curr_zero_count_round)
+        output_string = output_string + ", TRO: " + str(total_rotations)
         
+        print(output_string)
 
     print("Door password is the zero count: " + str(zero_count))
     print("Done!\n")
