@@ -20,6 +20,8 @@ TURN_DIAL_RIGHT = "R"
 TURN_DIRECTION = 0
 TURN_DISTANCE = 1
 
+LOG_OUTPUT = False 
+
 def read_input_file():
     data = []
 
@@ -67,47 +69,75 @@ def main():
     combos = retrieve_combos(data)
 
     # crack safe
-    current_num = dial_start
     zero_count = 0
+    exact_zero_count = 0 
     for combo in combos:
-        output_string = "Debug: BEF: " + str(current_num)
-        curr_zero_count_round = 0
 
+        distance_remaining = combo[TURN_DISTANCE]
+        full_turns = 0
+        partial_zeroes_encountered = 0
+
+        # check full turns
+        if int(distance_remaining) > (MAX_DIAL_NUM + 1):
+            full_turns = math.floor(int(combo[TURN_DISTANCE]) / (MAX_DIAL_NUM + 1))
+            distance_remaining = (int(combo[TURN_DISTANCE]) % (MAX_DIAL_NUM + 1))
+
+        # check if turning the dial right
         if combo[TURN_DIRECTION] == TURN_DIAL_RIGHT:
-            current_num = current_num + (int(combo[TURN_DISTANCE]) % (MAX_DIAL_NUM + 1))
 
-            if current_num > MAX_DIAL_NUM:
-                current_num = current_num - MAX_DIAL_NUM - 1
-                curr_zero_count_round = curr_zero_count_round + 1
+            # check partial turn (when turning dial right)
+            dial_current = int(dial_start) + int(distance_remaining)
 
-        if combo[TURN_DIRECTION] == TURN_DIAL_LEFT:
-            current_num = current_num - (int(combo[TURN_DISTANCE]) % (MAX_DIAL_NUM + 1))
+            if (dial_current > MAX_DIAL_NUM):
+                partial_zeroes_encountered = partial_zeroes_encountered + 1 
+                dial_current = dial_current - MAX_DIAL_NUM - 1
 
-            if current_num < MIN_DIAL_NUM:
-                current_num = current_num + MAX_DIAL_NUM + 1
+                if (dial_current == 100):
+                    dial_current = 0
 
-                if (current_num + int(combo[TURN_DISTANCE]) != MAX_DIAL_NUM + 1):
-                    curr_zero_count_round = curr_zero_count_round + 1
+        # check if turning the dial left
+        elif combo[TURN_DIRECTION] == TURN_DIAL_LEFT:
 
-        total_rotations = math.floor(int(combo[TURN_DISTANCE]) / (MAX_DIAL_NUM + 1))
+            # check partial turn (when turning dial right)
+            dial_current = int(dial_start) - int(distance_remaining)
 
-        if total_rotations > 0:
-            curr_zero_count_round = curr_zero_count_round + total_rotations
+            if (dial_current <= 0):
+                dial_current = (MAX_DIAL_NUM + 1) + dial_current
 
-            if current_num == 0 and combo[TURN_DIRECTION] == TURN_DIAL_LEFT:
-                curr_zero_count_round = curr_zero_count_round + 1
+                if (dial_current == 100):
+                    dial_current = 0
 
-        zero_count = zero_count + curr_zero_count_round
+                if (dial_start != 0):
+                    partial_zeroes_encountered = partial_zeroes_encountered + 1
 
-        output_string = output_string + ", DIR: " + str(combo[TURN_DIRECTION])
-        output_string = output_string + ", DIS: " + str(combo[TURN_DISTANCE])
-        output_string = output_string + ", AFT: " + str(current_num)
-        output_string = output_string + ", ZER: " + str(curr_zero_count_round)
-        output_string = output_string + ", TRO: " + str(total_rotations)
-        
-        print(output_string)
 
-    print("Door password is the zero count: " + str(zero_count))
+        # calculate zero counts
+        if dial_current == 0:
+            exact_zero_count = exact_zero_count + 1
+
+        zero_count = zero_count + full_turns
+        zero_count = zero_count + partial_zeroes_encountered
+
+        # reset dial_start
+        dial_start = dial_current
+
+        # log output --- if turned on
+        if (LOG_OUTPUT):
+            output_string = "BEFORE: " + str(dial_start)
+            output_string = output_string + ", DIRECT: " + str(combo[TURN_DIRECTION])
+            output_string = output_string + ", DISTAN: " + str(combo[TURN_DISTANCE])
+            output_string = output_string + ", CURREN: " + str(dial_current)
+            output_string = output_string + ", PARTTR: " + str(partial_zeroes_encountered)
+            output_string = output_string + ", FULLTR: " + str(full_turns)
+            output_string = output_string + ", RTOTAL: " + str(zero_count)
+            print(output_string)
+
+
+    # print solutions
+    print("Part 1 --- Door password is: " + str(exact_zero_count))
+    print("Part 2 --- Door password is: " + str(zero_count))
+
+    # good exit
     print("Done!\n")
     sys.exit(GOOD_EXIT)
 
